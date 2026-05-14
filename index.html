@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hermes Multi-Strategy Stock Dashboard</title>
+  <style>
+    :root { --bg:#0b1020; --panel:#121a32; --panel2:#0f172a; --text:#e5e7eb; --muted:#94a3b8; --accent:#60a5fa; --good:#22c55e; --bad:#ef4444; --warn:#f59e0b; --line:#24304d; }
+    *{box-sizing:border-box} body{margin:0;background:linear-gradient(135deg,#070b16,#10182d 50%,#07101f);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;}
+    header{padding:22px 18px;border-bottom:1px solid var(--line);background:rgba(7,11,22,.75);position:sticky;top:0;z-index:10;backdrop-filter:blur(10px)}
+    h1{margin:0 0 8px;font-size:24px}.meta{color:var(--muted);font-size:13px;line-height:1.5}.wrap{max-width:1280px;margin:0 auto;padding:18px}.grid{display:grid;grid-template-columns:360px 1fr;gap:16px}.panel{background:rgba(18,26,50,.88);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 36px rgba(0,0,0,.25)}
+    .side{padding:14px;max-height:calc(100vh - 128px);overflow:auto;position:sticky;top:92px}.chartPanel{padding:14px}.strategy{margin-bottom:14px;border-bottom:1px solid var(--line);padding-bottom:10px}.strategy h2{font-size:16px;margin:0 0 8px;color:#bfdbfe}.bucket{margin:8px 0}.bucket-title{font-size:12px;color:var(--muted);margin-bottom:6px}.chips{display:flex;flex-wrap:wrap;gap:6px}.chip{direction:ltr;border:1px solid #334155;background:var(--panel2);color:var(--text);padding:6px 8px;border-radius:999px;cursor:pointer;font-size:12px}.chip:hover,.chip.active{border-color:var(--accent);background:#172554}.chip.top{border-color:rgba(34,197,94,.5)}.chip.aggr{border-color:rgba(245,158,11,.55)}.chip.avoid{border-color:rgba(239,68,68,.5)}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}.symbolTitle{font-size:22px;font-weight:700;direction:ltr;margin-left:auto}.btn{border:1px solid #334155;background:#0f172a;color:var(--text);padding:8px 10px;border-radius:10px;cursor:pointer}.btn:hover,.btn.active{background:#1d4ed8;border-color:#60a5fa}.tvbox{height:620px;border-radius:14px;overflow:hidden;background:#020617;border:1px solid var(--line)}
+    .summary{margin-top:14px;padding:14px;line-height:1.55}.summary h3{margin:0 0 10px}.summary ul{margin:6px 0 0;padding-right:18px}.note{color:var(--muted);font-size:12px}.risk{color:#fbbf24}.good{color:#86efac}.bad{color:#fca5a5}.search{width:100%;padding:10px;border:1px solid #334155;background:#020617;color:var(--text);border-radius:10px;margin:10px 0}.footer{color:var(--muted);font-size:12px;text-align:center;padding:30px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}.side{position:static;max-height:none}.tvbox{height:520px} header{position:static}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap" style="padding:0">
+    <h1>Hermes — דשבורד מניות לפי 5 אסטרטגיות</h1>
+    <div class="meta" id="meta"></div>
+  </div>
+</header>
+<div class="wrap grid">
+  <aside class="panel side">
+    <div class="note">לחץ על סימול כדי לראות גרף. הגרף הוא TradingView וכולל טווחים כמו יום / 5 ימים / חודש / שנה / כמה שנים.</div>
+    <input id="search" class="search" placeholder="חיפוש סימול..." />
+    <div id="strategies"></div>
+  </aside>
+  <main class="panel chartPanel">
+    <div class="toolbar">
+      <span class="symbolTitle" id="symbolTitle">NASDAQ:NVDA</span>
+      <button class="btn active" data-range="1D">יום</button>
+      <button class="btn" data-range="5D">5 ימים</button>
+      <button class="btn" data-range="1M">חודש</button>
+      <button class="btn" data-range="12M">שנה</button>
+      <button class="btn" data-range="60M">5 שנים</button>
+      <button class="btn" data-range="ALL">הכול</button>
+    </div>
+    <div id="tv_chart" class="tvbox"></div>
+    <section class="summary" id="summary"></section>
+  </main>
+</div>
+<div class="footer">Research/watchlist only — לא ייעוץ השקעות אישי. נתוני הגרף מגיעים מ־TradingView ועלולים להיות מושהים.</div>
+<script>
+const DASHBOARD_DATA = {"generatedAt": "2026-05-14T00:59:34+00:00", "source": "Hermes stock watchlist + TradingView embedded charts", "watchlistId": "2026-05-14-action-watchlist", "defaultSymbol": "TER", "strategies": [{"id": "latest_flat_watchlist", "title": "Latest Saved Watchlist", "buckets": {"top_balanced_watchlist": ["TER", "NVDA", "ALAB", "CLS"], "aggressive_momentum_watchlist": ["NBIS", "AAOI", "POET", "QUBT"], "pullback_only_do_not_chase": ["FN", "LITE", "CRWV", "SEDG"], "watch_only_wait_for_reversal": ["ORCL", "IONQ", "ASTS", "BE", "MSTR", "CF"], "avoid_for_now_weak_or_too_risky": ["UUUU", "LEU", "NET", "VST", "SMCI"]}}], "rationale": {"TER": ["Balanced AI test-equipment setup; modest positive day, not extremely extended; cleaner than chasing +10% moves."], "NVDA": ["Highest-quality AI/liquidity anchor; modest positive day; not a small-cap rebound but cleaner risk profile."], "ALAB": ["AI infrastructure momentum with liquidity; positive but less vertical than FN/AAOI; still high valuation risk."], "CLS": ["Quality AI hardware name, slight weakness; only with reversal confirmation, not blind chase."], "NBIS": ["Strong continuation momentum and liquidity; high-risk continuation bucket, not conservative quality."], "AAOI": ["Momentum winner; previous anti-chase rule missed it, but current entry risk is high after large run."], "POET": ["Very high-volume optics/speculative continuation; aggressive only."], "QUBT": ["Quantum momentum/speculative; aggressive only."], "FN": ["Great quality rebound but +9.71% day; prefer pullback/retest, not chase after vertical move."], "LITE": ["AI optics strength but extended; pullback-only."], "CRWV": ["AI infrastructure but volatile/loss-risk; pullback-only/aggressive."], "SEDG": ["Turnaround bounce; risky sector, do not chase gap strength."], "ORCL": ["Quality large cap but current day was weak; wait for reversal."], "IONQ": ["Speculative quantum, flat/down; wait for momentum confirmation."], "ASTS": ["High beta but down from baseline; wait for stabilization."], "BE": ["Strong theme but watch-only due extension/valuation and negative day."], "MSTR": ["Crypto proxy; watch-only pending BTC/crypto confirmation."], "CF": ["Defensive/commodity name, positive day but outside core AI/momentum thesis."]}, "baselinePrices": {"FN": {"price": 696.07, "date": "2026-05-13"}, "AAOI": {"price": 227.0, "date": "2026-05-13"}, "NBIS": {"price": 208.98, "date": "2026-05-13"}, "TER": {"price": 363.38, "date": "2026-05-13"}, "ORCL": {"price": 186.83, "date": "2026-05-13"}, "CLS": {"price": 372.55, "date": "2026-05-13"}, "CRWV": {"price": 112.52, "date": "2026-05-13"}, "ASTS": {"price": 75.1389, "date": "2026-05-13"}, "SEDG": {"price": 42.77, "date": "2026-05-13"}, "UUUU": {"price": 20.18, "date": "2026-05-13"}, "LITE": {"price": 1038.0, "date": "2026-05-13"}, "IONQ": {"price": 55.21, "date": "2026-05-13"}, "BE": {"price": 280.69, "date": "2026-05-13"}, "MSTR": {"price": 178.0539, "date": "2026-05-13"}, "CF": {"price": 130.39, "date": "2026-05-13"}, "ALAB": {"price": 227.3, "date": "2026-05-13"}, "RMBS": {"price": 130.28, "date": "2026-05-13"}, "NVDA": {"price": 227.75, "date": "2026-05-13"}, "SMCI": {"price": 32.16, "date": "2026-05-13"}, "OKLO": {"price": 69.3884, "date": "2026-05-13"}, "LEU": {"price": 192.31, "date": "2026-05-13"}, "NNE": {"price": 27.05, "date": "2026-05-13"}, "HUT": {"price": 108.32, "date": "2026-05-13"}, "COIN": {"price": 201.7, "date": "2026-05-13"}, "MARA": {"price": 12.75, "date": "2026-05-13"}, "QBTS": {"price": 21.38, "date": "2026-05-13"}, "QUBT": {"price": 11.08, "date": "2026-05-13"}, "POET": {"price": 14.43, "date": "2026-05-13"}, "RDW": {"price": 11.46, "date": "2026-05-13"}, "FLNC": {"price": 22.1, "date": "2026-05-13"}, "NET": {"price": 186.79, "date": "2026-05-13"}, "PLTR": {"price": 130.1999, "date": "2026-05-13"}, "VST": {"price": 142.61, "date": "2026-05-13"}}, "allSymbols": ["TER", "NVDA", "ALAB", "CLS", "NBIS", "AAOI", "POET", "QUBT", "FN", "LITE", "CRWV", "SEDG", "ORCL", "IONQ", "ASTS", "BE", "MSTR", "CF", "UUUU", "LEU", "NET", "VST", "SMCI"]};
+const EXCHANGE_OVERRIDES = {BRK_B:'NYSE',BRK_A:'NYSE'};
+let selected = DASHBOARD_DATA.defaultSymbol || 'NASDAQ:NVDA';
+let selectedRange = '1D';
+function tvSymbol(sym){
+  sym = (sym || '').toUpperCase().replace('.','_');
+  if(sym.includes(':')) return sym;
+  const exch = EXCHANGE_OVERRIDES[sym] || 'NASDAQ';
+  return `${exch}:${sym}`;
+}
+function renderMeta(){
+  document.getElementById('meta').innerHTML = `עודכן: <b>${DASHBOARD_DATA.generatedAt}</b> · מקור: ${DASHBOARD_DATA.source || 'Hermes daily watchlist'} · Watchlist ID: <span dir="ltr">${DASHBOARD_DATA.watchlistId || '-'}</span>`;
+}
+function chipClass(bucket){
+  const b=bucket.toLowerCase();
+  if(b.includes('top')) return 'top'; if(b.includes('aggressive')) return 'aggr'; if(b.includes('reject')||b.includes('avoid')) return 'avoid'; return '';
+}
+function renderStrategies(){
+  const q=(document.getElementById('search').value||'').trim().toUpperCase();
+  const root=document.getElementById('strategies'); root.innerHTML='';
+  for(const st of DASHBOARD_DATA.strategies){
+    const div=document.createElement('div'); div.className='strategy';
+    div.innerHTML=`<h2>${st.title}</h2>`;
+    for(const [bucket, symbols] of Object.entries(st.buckets||{})){
+      const filtered=(symbols||[]).filter(s=>!q || s.toUpperCase().includes(q));
+      if(!filtered.length) continue;
+      const b=document.createElement('div'); b.className='bucket';
+      b.innerHTML=`<div class="bucket-title">${bucket}</div><div class="chips"></div>`;
+      const chips=b.querySelector('.chips');
+      filtered.forEach(sym=>{
+        const c=document.createElement('button'); c.className=`chip ${chipClass(bucket)} ${tvSymbol(sym)===selected?'active':''}`; c.textContent=sym; c.onclick=()=>selectSymbol(sym); chips.appendChild(c);
+      });
+      div.appendChild(b);
+    }
+    root.appendChild(div);
+  }
+}
+function selectSymbol(sym){ selected=tvSymbol(sym); document.getElementById('symbolTitle').textContent=selected; renderStrategies(); renderSummary(sym); loadChart(); }
+function renderSummary(sym){
+  const raw=(sym||selected).split(':').pop().replace('_','.');
+  const r=(DASHBOARD_DATA.rationale && DASHBOARD_DATA.rationale[raw]) || [];
+  const base=(DASHBOARD_DATA.baselinePrices && DASHBOARD_DATA.baselinePrices[raw]) || null;
+  document.getElementById('summary').innerHTML=`<h3 dir="ltr">${raw}</h3>`+
+    (base?`<div class="note">Baseline: ${base.price} · ${base.date || ''} · ${base.source || ''}</div>`:'')+
+    `<ul>${(Array.isArray(r)?r:[r]).map(x=>`<li>${x}</li>`).join('') || '<li>אין רציונל מפורט בסנאפשוט האחרון.</li>'}</ul>`;
+}
+function loadChart(){
+  const box=document.getElementById('tv_chart'); box.innerHTML='';
+  const script=document.createElement('script'); script.src='https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js'; script.async=true;
+  script.innerHTML=JSON.stringify({
+    autosize:true, symbol:selected, interval:'15', range:selectedRange, timezone:'Etc/UTC', theme:'dark', style:'1', locale:'en', allow_symbol_change:true, calendar:false, support_host:'https://www.tradingview.com'
+  });
+  box.appendChild(script);
+}
+document.querySelectorAll('[data-range]').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('[data-range]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');selectedRange=btn.dataset.range;loadChart();});
+document.getElementById('search').addEventListener('input', renderStrategies);
+renderMeta(); renderStrategies(); selectSymbol((DASHBOARD_DATA.defaultSymbol||'NVDA').split(':').pop());
+</script>
+</body>
+</html>
